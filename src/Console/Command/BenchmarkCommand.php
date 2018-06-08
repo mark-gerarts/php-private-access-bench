@@ -3,6 +3,8 @@
 namespace PrivateAccessBench\Console\Command;
 
 use PrivateAccessBench\MyClass;
+use PrivateAccessBench\Task\ArrayCastTask;
+use PrivateAccessBench\Task\ClosureTask;
 use PrivateAccessBench\Task\ReflectionTask;
 use PrivateAccessBench\TaskInterface;
 use Symfony\Component\Console\Command\Command;
@@ -34,21 +36,21 @@ class BenchmarkCommand extends Command
         $output->writeln('');
 
         $tasks = [
-            new ReflectionTask()
+            new ReflectionTask(),
+            new ClosureTask(),
+            new ArrayCastTask()
         ];
 
-        $this->validateTasks($tasks);
+        $tasks = $this->validateTasks($tasks);
         $results = $this->runTasks($tasks, $iterations);
 
-        // Order by duration
+        // Order by duration.
         uasort($results, function (array $a, array $b) {
             return $a['time'] <=> $b['time'];
         });
 
-
-
         $table = new Table($output);
-        $table->setHeaders(array('Method', 'Time (ms)', 'Memory peak (MB)'));
+        $table->setHeaders(array('Method', 'Time', 'Memory peak'));
         $table->addRows($results);
         $table->render();
     }
@@ -76,10 +78,10 @@ class BenchmarkCommand extends Command
     {
         return array_map(function (TaskInterface $task) use ($iterations): array {
             $bench = new \Ubench();
-            $class = new MyClass();
 
             $bench->start();
             for ($i = 0; $i < $iterations; $i++) {
+                $class = new MyClass();
                 $task->run($class);
             }
             $bench->end();
