@@ -1,0 +1,10 @@
+#!/usr/bin/env php
+<?php
+
+require 'vendor/autoload.php';
+
+$app = new \Symfony\Component\Console\Application();
+$command = new PrivateAccessBench\Console\Command\BenchmarkCommand();
+$app->add($command);
+$app->setDefaultCommand($command->getName());
+$app->run();

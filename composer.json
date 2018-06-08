@@ -1,0 +1,12 @@
+{
+    "require": {
+        "devster/ubench": "~2.0.0",
+        "symfony/console": "^4.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "PrivateAccessBench\\": "src/"
+        }
+    },
+    "bin": ["bin/console"]
+}
