@@ -5,10 +5,10 @@ namespace PrivateAccessBench\Task;
 use PrivateAccessBench\MyClass;
 use PrivateAccessBench\TaskInterface;
 
-class ArrayCastTask implements TaskInterface
+class ArrayCastReader implements TaskInterface
 {
 
-    public function run(MyClass $class): string
+    public function run(MyClass $class)
     {
         $array = (array) $class;
         $property = 'property';
@@ -26,5 +26,4 @@ class ArrayCastTask implements TaskInterface
     {
         return 'Array cast';
     }
-
 }

@@ -5,7 +5,7 @@ namespace PrivateAccessBench\Task;
 use PrivateAccessBench\MyClass;
 use PrivateAccessBench\TaskInterface;
 
-class ReflectionTask implements TaskInterface
+class ReflectionReader implements TaskInterface
 {
     public function run(MyClass $class): string
     {

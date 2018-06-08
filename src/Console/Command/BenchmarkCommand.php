@@ -3,12 +3,17 @@
 namespace PrivateAccessBench\Console\Command;
 
 use PrivateAccessBench\MyClass;
-use PrivateAccessBench\Task\ArrayCastTask;
-use PrivateAccessBench\Task\ClosureTask;
-use PrivateAccessBench\Task\ReflectionTask;
+use PrivateAccessBench\Task\ArrayCastReader;
+use PrivateAccessBench\Task\ArrayCastWriter;
+use PrivateAccessBench\Task\ClosureReader;
+use PrivateAccessBench\Task\ClosureWriter;
+use PrivateAccessBench\Task\ReflectionReader;
+use PrivateAccessBench\Task\ReflectionWriter;
 use PrivateAccessBench\TaskInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Helper\TableCell;
+use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -35,33 +40,52 @@ class BenchmarkCommand extends Command
         $output->writeln('Iterations: ' . $iterations);
         $output->writeln('');
 
-        $tasks = [
-            new ReflectionTask(),
-            new ClosureTask(),
-            new ArrayCastTask()
+        $readers = [
+            new ReflectionReader(),
+            new ClosureReader(),
+            new ArrayCastReader(),
+        ];
+        $writers = [
+            new ReflectionWriter(),
+            new ClosureWriter(),
+            new ArrayCastWriter()
         ];
 
-        $tasks = $this->validateTasks($tasks);
-        $results = $this->runTasks($tasks, $iterations);
+        $readers = $this->validateReaders($readers);
+        $readerResults = $this->runTasks($readers, $iterations);
+        $writers = $this->validateWriters($writers);
+        $writerResults = $this->runTasks($writers, $iterations);
+
+        $sortByTime = function (array $a, array $b) {
+            return $a['time'] <=> $b['time'];
+        };
 
         // Order by duration.
-        uasort($results, function (array $a, array $b) {
-            return $a['time'] <=> $b['time'];
-        });
+        uasort($readerResults, $sortByTime);
+        uasort($writerResults, $sortByTime);
 
         $table = new Table($output);
         $table->setHeaders(array('Method', 'Time', 'Memory peak'));
-        $table->addRows($results);
+        // Readers.
+        $table->addRow([new TableCell('Readers', ['colspan' => 3])]);
+        $table->addRow(new TableSeparator());
+        $table->addRows($readerResults);
+        // Writers.
+        $table->addRow(new TableSeparator());
+        $table->addRow([new TableCell('Writers', ['colspan' => 3])]);
+        $table->addRow(new TableSeparator(['colspan' => 3]));
+        $table->addRows($writerResults);
+
         $table->render();
     }
 
     /**
-     * Filter out tasks that don't work correctly.
+     * Filter out reader tasks that don't work correctly.
      *
-     * @param array $tasks
-     * @return array
+     * @param TaskInterface[] $tasks
+     * @return TaskInterface[]
      */
-    protected function validateTasks(array $tasks): array
+    protected function validateReaders(array $tasks): array
     {
         return array_filter($tasks, function (TaskInterface $task): bool {
             $class = new MyClass();
@@ -70,7 +94,23 @@ class BenchmarkCommand extends Command
     }
 
     /**
-     * @param array $tasks
+     * @param TaskInterface[] $tasks
+     * @return TaskInterface[]
+     */
+    protected function validateWriters(array $tasks): array
+    {
+        return array_filter($tasks, function (TaskInterface $task): bool {
+            $class = new MyClass();
+            $task->run($class);
+            return $class->getProperty() === 'changed'
+                // This is a quick workaround for the ArrayCastWriter, which
+                // doesn't touch the original object. 
+                || $task->run($class)->getProperty() === 'changed';
+        });
+    }
+
+    /**
+     * @param TaskInterface[] $tasks
      * @param int $iterations
      * @return array
      */

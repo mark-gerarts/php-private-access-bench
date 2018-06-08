@@ -5,16 +5,19 @@ namespace PrivateAccessBench\Task;
 use PrivateAccessBench\MyClass;
 use PrivateAccessBench\TaskInterface;
 
-class ClosureTask implements TaskInterface
+class ClosureWriter implements TaskInterface
 {
 
-    public function run(MyClass $class): string
+    public function run(MyClass $class)
     {
-        $closure = \Closure::bind(function (MyClass $class) {
+        $closure = \Closure::bind(function &(MyClass $class) {
             return $class->property;
         }, null, MyClass::class);
 
-        return $closure($class);
+        $property = &$closure($class);
+        $property = 'changed';
+
+        return $class;
     }
 
     public function getName(): string
