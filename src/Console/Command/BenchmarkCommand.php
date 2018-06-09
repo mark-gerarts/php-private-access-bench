@@ -57,12 +57,22 @@ class BenchmarkCommand extends Command
         $writerResults = $this->runTasks($writers, $iterations);
 
         $sortByTime = function (array $a, array $b) {
-            return $a['time'] <=> $b['time'];
+            return $a['time_raw'] <=> $b['time_raw'];
         };
 
         // Order by duration.
         uasort($readerResults, $sortByTime);
         uasort($writerResults, $sortByTime);
+
+        // Unset the raw_time column.
+        $unset_raw_time = function (array $results): array {
+            foreach ($results as &$result) {
+                unset($result['time_raw']);
+            }
+            return $results;
+        };
+        $readerResults = $unset_raw_time($readerResults);
+        $writerResults = $unset_raw_time($writerResults);
 
         $table = new Table($output);
         $table->setHeaders(array('Method', 'Time', 'Memory peak'));
@@ -104,7 +114,7 @@ class BenchmarkCommand extends Command
             $task->run($class);
             return $class->getProperty() === 'changed'
                 // This is a quick workaround for the ArrayCastWriter, which
-                // doesn't touch the original object. 
+                // doesn't touch the original object.
                 || $task->run($class)->getProperty() === 'changed';
         });
     }
@@ -129,7 +139,8 @@ class BenchmarkCommand extends Command
             return [
                 'name' => $task->getName(),
                 'time' => $bench->getTime(),
-                'memory' => $bench->getMemoryPeak()
+                'time_raw' => $bench->getTime(true),
+                'memory' => $bench->getMemoryPeak(),
             ];
         }, $tasks);
     }
