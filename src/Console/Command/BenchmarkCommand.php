@@ -9,6 +9,8 @@ use PrivateAccessBench\Task\ClosureReader;
 use PrivateAccessBench\Task\ClosureWriter;
 use PrivateAccessBench\Task\ReflectionReader;
 use PrivateAccessBench\Task\ReflectionWriter;
+use PrivateAccessBench\Task\Getter;
+use PrivateAccessBench\Task\Setter;
 use PrivateAccessBench\TaskInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
@@ -41,11 +43,13 @@ class BenchmarkCommand extends Command
         $output->writeln('');
 
         $readers = [
+            new Getter(),
             new ReflectionReader(),
             new ClosureReader(),
             new ArrayCastReader(),
         ];
         $writers = [
+            new Setter(),
             new ReflectionWriter(),
             new ClosureWriter(),
             new ArrayCastWriter()
@@ -75,14 +79,14 @@ class BenchmarkCommand extends Command
         $writerResults = $unset_raw_time($writerResults);
 
         $table = new Table($output);
-        $table->setHeaders(array('Method', 'Time', 'Memory peak'));
+        $table->setHeaders(array('Method', 'Time'));
         // Readers.
-        $table->addRow([new TableCell('Readers', ['colspan' => 3])]);
+        $table->addRow([new TableCell('Readers', ['colspan' => 2])]);
         $table->addRow(new TableSeparator());
         $table->addRows($readerResults);
         // Writers.
         $table->addRow(new TableSeparator());
-        $table->addRow([new TableCell('Writers', ['colspan' => 3])]);
+        $table->addRow([new TableCell('Writers', ['colspan' => 2])]);
         $table->addRow(new TableSeparator(['colspan' => 3]));
         $table->addRows($writerResults);
 
@@ -139,8 +143,7 @@ class BenchmarkCommand extends Command
             return [
                 'name' => $task->getName(),
                 'time' => $bench->getTime(),
-                'time_raw' => $bench->getTime(true),
-                'memory' => $bench->getMemoryPeak(),
+                'time_raw' => $bench->getTime(true)
             ];
         }, $tasks);
     }

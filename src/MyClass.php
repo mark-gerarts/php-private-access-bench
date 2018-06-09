@@ -10,4 +10,9 @@ class MyClass
     {
         return $this->property;
     }
+
+    public function setProperty(string $property): void
+    {
+        $this->property = $property;
+    }
 }
