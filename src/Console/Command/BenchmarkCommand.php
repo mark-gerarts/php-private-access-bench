@@ -5,6 +5,7 @@ namespace PrivateAccessBench\Console\Command;
 use PrivateAccessBench\MyClass;
 use PrivateAccessBench\Task\ArrayCastReader;
 use PrivateAccessBench\Task\ArrayCastWriter;
+use PrivateAccessBench\Task\ArrayWalkWriter;
 use PrivateAccessBench\Task\ClosureReader;
 use PrivateAccessBench\Task\ClosureWriter;
 use PrivateAccessBench\Task\ReflectionReader;
@@ -52,7 +53,8 @@ class BenchmarkCommand extends Command
             new Setter(),
             new ReflectionWriter(),
             new ClosureWriter(),
-            new ArrayCastWriter()
+            new ArrayCastWriter(),
+            new ArrayWalkWriter()
         ];
 
         $readers = $this->validateReaders($readers);
